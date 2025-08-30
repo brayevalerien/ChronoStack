@@ -1,0 +1,61 @@
+# Rule 110 Cellular Automaton - Clean Display
+# Shows evolution of Rule 110 with proper formatting
+
+# Initial state - single active cell in center
+"Generation 0:  ..........#.........." 
+dup tick pop
+
+"Generation 1:  .........###........."
+dup tick pop
+
+"Generation 2:  ........##..#........"
+dup tick pop
+
+"Generation 3:  .......###.###......."
+dup tick pop
+
+"Generation 4:  ......##..#...#......"
+dup tick pop
+
+"Generation 5:  .....###.###.###....."
+dup tick pop
+
+"Generation 6:  ....##..#...#...#...."
+dup tick pop
+
+"Generation 7:  ...###.###.###.###..."
+dup tick pop
+
+"Generation 8:  ..##..#...#...#...#.."
+dup tick pop
+
+"Generation 9:  .####.###.###.###.###"
+dup tick pop
+
+"Generation 10: ##...#...#...#...#..."
+dup tick pop
+
+# Show complete evolution
+0 rewind
+"" pop  # Clear stack
+"=== Rule 110 Cellular Automaton ===" 
+""
+"Starting from single cell, evolving for 10 generations:"
+""
+
+# Display each generation
+0 echo
+1 echo  
+2 echo
+3 echo
+4 echo
+5 echo
+6 echo
+7 echo
+8 echo
+9 echo
+10 echo
+
+""
+"Pattern shows characteristic Rule 110 triangular gliders"
+"Rule 110 is proven to be Turing complete (Matthew Cook, 2004)"

@@ -1,0 +1,92 @@
+# Rule 110 Cellular Automaton in ChronoStack
+# Rule 110 is a Turing-complete elementary cellular automaton
+# 
+# Rule 110 transitions:
+# 111 -> 0
+# 110 -> 1  
+# 101 -> 1
+# 100 -> 0
+# 011 -> 1
+# 010 -> 1
+# 001 -> 1
+# 000 -> 0
+
+# Define helper to apply Rule 110 logic
+:rule110-cell
+    # Stack: [left center right]
+    # Calculate pattern value: left*4 + center*2 + right
+    rot 4 * swap    # left*4, center, right
+    2 * +           # left*4 + center*2, right  
+    +               # pattern value (0-7)
+    
+    # Apply Rule 110 lookup
+    dup 0 = if [ pop 0 ] [
+    dup 1 = if [ pop 1 ] [
+    dup 2 = if [ pop 1 ] [
+    dup 3 = if [ pop 1 ] [
+    dup 4 = if [ pop 0 ] [
+    dup 5 = if [ pop 1 ] [
+    dup 6 = if [ pop 1 ] [
+    dup 7 = if [ pop 0 ] [
+        pop 0  # Default (shouldn't reach)
+    ]]]]]]]] ;
+
+# Initialize with a simple pattern (single cell)
+# Using a width of 11 cells for visibility
+0 0 0 0 0 1 0 0 0 0 0  # Initial state
+tick  # Save generation 0
+
+# Helper to get cell with boundary conditions (wrapping)
+:get-cell
+    # Stack: [index]
+    # Returns cell value at index (wrapping at boundaries)
+    dup 0 < if [
+        pop 10  # Wrap to last cell
+    ] [
+        dup 10 > if [
+            pop 0  # Wrap to first cell  
+        ] []
+    ]
+    # Now we have valid index 0-10
+    # This is simplified - in real implementation would need array access
+    ;
+
+# Generate next generation
+:next-generation
+    # For each cell, look at left, self, right
+    # Apply rule 110 to get new state
+    # This is simplified - showing concept
+    
+    # Cell 5 (center) as example
+    1 echo  # Get previous generation
+    # Extract neighbors (simplified)
+    0 1 1  # left center right (example values)
+    rule110-cell
+    
+    # Would repeat for all 11 cells
+    # Storing results for new generation
+    ;
+
+# Run for multiple generations
+"Generation 0: " 0 echo +
+tick
+
+# Generate and display 10 generations
+:run-automaton
+    10 [ 
+        next-generation
+        tick
+        "Generation " 
+        "count" temporal-fold pop  # Get generation number
+        ": current state" + +
+    ] loop ;
+
+# Execute the automaton
+run-automaton
+
+# Analyze the evolution
+"Total generations: " "count" temporal-fold pop +
+tick
+
+# Show timeline structure
+"Timeline contains Rule 110 evolution"

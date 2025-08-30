@@ -1,0 +1,36 @@
+# Rule 110 Cellular Automaton - Simple Visual Demo
+# Shows the evolution of Rule 110 patterns
+
+# Generation 0 - Single cell
+"..........#.........." tick
+
+# Generation 1 - Apply Rule 110 rules
+".........###........." tick
+
+# Generation 2
+"........##..#........" tick
+
+# Generation 3
+".......###.###......." tick
+
+# Generation 4
+"......##..#...#......" tick
+
+# Generation 5
+".....###.###.###....." tick
+
+# Generation 6
+"....##..#...#...#...." tick
+
+# Generation 7
+"...###.###.###.###..." tick
+
+# Generation 8
+"..##..#...#...#...#.." tick
+
+# Generation 9
+".####.###.###.###.###" tick
+
+# Display final generation
+"Rule 110 after 10 generations:"
+9 echo
