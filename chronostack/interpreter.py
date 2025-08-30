@@ -28,7 +28,27 @@ from chronostack.timeline import Timeline
 class InterpreterError(Exception):
     """Exception raised during program execution."""
 
-    pass
+    def __init__(self, message: str, moment_index: int = None, timeline_branch: str = None, 
+                 stack_state: list = None, word_context: str = None):
+        self.message = message
+        self.moment_index = moment_index  
+        self.timeline_branch = timeline_branch
+        self.stack_state = stack_state or []
+        self.word_context = word_context
+        
+        # Build comprehensive error message
+        full_message = message
+        if moment_index is not None:
+            full_message += f" (at moment {moment_index}"
+            if timeline_branch:
+                full_message += f" in branch '{timeline_branch}'"
+            full_message += ")"
+        if word_context:
+            full_message += f" while executing word '{word_context}'"
+        if stack_state:
+            full_message += f" with stack: {stack_state}"
+            
+        super().__init__(full_message)
 
 
 class Interpreter:
@@ -50,14 +70,25 @@ class Interpreter:
     def pop(self) -> Any:
         """Pop and return the top value from the stack."""
         if not self.current_stack():
-            raise InterpreterError("Cannot pop from empty stack")
+            raise self._create_error("Cannot pop from empty stack")
         return self.current_stack().pop()
 
     def peek(self) -> Any:
         """Peek at the top value without removing it."""
         if not self.current_stack():
-            raise InterpreterError("Cannot peek at empty stack")
+            raise self._create_error("Cannot peek at empty stack")
         return self.current_stack()[-1]
+
+    def _create_error(self, message: str) -> InterpreterError:
+        """Create an error with temporal context."""
+        current_word = self.call_stack[-1] if self.call_stack else None
+        return InterpreterError(
+            message,
+            moment_index=self.timeline.current_index,
+            timeline_branch=self.timeline.current_branch,
+            stack_state=self.current_stack().copy(),
+            word_context=current_word
+        )
 
     def execute_program(self, program: ProgramNode) -> None:
         """Execute a complete program."""

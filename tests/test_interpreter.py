@@ -231,6 +231,36 @@ class TestInterpreter:
         stack = interpreter.current_stack()
         assert isinstance(stack[-1], int)  # Should have resolved count
 
+    def test_fixed_point_paradox_resolution_integration(self):
+        """Test fixed-point paradox resolution through interpreter."""
+        from chronostack.parser import OperationNode
+        from chronostack.lexer import TokenType
+        
+        interpreter = Interpreter()
+
+        # Create a paradox scenario
+        interpreter.push(10)
+        interpreter.execute_operation(OperationNode("tick", TokenType.TICK))
+        interpreter.push(20) 
+        interpreter.execute_operation(OperationNode("tick", TokenType.TICK))
+        
+        # Send value back to create paradox
+        interpreter.push(99)
+        interpreter.push(1)
+        interpreter.execute_operation(OperationNode("send", TokenType.SEND))
+        assert interpreter.pop()  # Should return True for successful send
+        
+        # Verify paradox exists
+        assert interpreter.timeline.has_paradoxes()
+        
+        # Test that we can resolve using fixed-point strategy directly
+        paradoxes = interpreter.timeline.detect_paradoxes()
+        moment_index = paradoxes[0][0]
+        
+        success = interpreter.timeline.resolve_paradox(moment_index, "fixed_point")
+        assert success
+        assert not interpreter.timeline.has_paradoxes()
+
     def test_advanced_temporal_operations(self):
         """Test advanced temporal operations like echo and send."""
         # Test echo operation
@@ -287,14 +317,84 @@ class TestInterpreter:
             self.execute_code("3 42 loop")  # Not a code block
 
     def test_temporal_fold_and_ripple(self):
-        """Test temporal-fold and ripple operations."""
-        # Test temporal-fold
-        self.execute_code('10 tick 20 tick 30 tick "+" temporal-fold')
-        # Should apply + operation across all moments
+        """Test comprehensive temporal-fold and ripple operations."""
+        # Test temporal-fold with various operations
+        interpreter = self.execute_code('10 tick 20 tick 30 tick "sum" temporal-fold')
+        results = interpreter.current_stack()[-1]
+        assert isinstance(results, list)
+        
+        interpreter = self.execute_code('10 tick 20 tick 30 tick "count" temporal-fold')
+        results = interpreter.current_stack()[-1]
+        assert isinstance(results, list)
+        
+        interpreter = self.execute_code('10 tick 20 tick 30 tick "max" temporal-fold')
+        results = interpreter.current_stack()[-1]
+        assert isinstance(results, list)
 
-        # Test ripple
-        self.execute_code('10 tick 20 tick 30 tick "multiply" 2 ripple')
-        # Should apply multiply operation to future moments
+        # Test ripple with different operations
+        interpreter = self.execute_code('10 tick 20 tick 30 tick 2 rewind pop "push" 999 ripple')
+        # Should push 999 to all future moments
+        
+        interpreter = self.execute_code('10 tick 20 tick 30 tick 1 rewind pop "multiply" 2 ripple')
+        # Should multiply top values in future moments by 2
+        
+        interpreter = self.execute_code('10 tick 20 tick 30 tick 1 rewind pop "clear" 0 ripple')
+        # Should clear all future moments
+
+    def test_enhanced_temporal_operations_comprehensive(self):
+        """Test all enhanced temporal operations with error handling."""
+        import pytest
+        
+        from chronostack.interpreter import InterpreterError
+
+        # Test temporal-fold requires operation string
+        with pytest.raises(InterpreterError, match="Temporal-fold requires operation string"):
+            self.execute_code("temporal-fold")
+            
+        # Test temporal-fold with invalid operation type
+        with pytest.raises(InterpreterError, match="Temporal-fold requires string operation"):
+            self.execute_code("42 temporal-fold")
+
+        # Test ripple requires operation and value
+        with pytest.raises(InterpreterError, match="Ripple requires operation and value"):
+            self.execute_code("ripple")
+            
+        with pytest.raises(InterpreterError, match="Ripple requires operation and value"):
+            self.execute_code("42 ripple")
+
+        # Test ripple with invalid operation type
+        with pytest.raises(InterpreterError, match="Ripple requires string operation"):
+            self.execute_code("42 100 ripple")
+
+        # Test successful operations
+        interpreter = self.execute_code('5 10 15 tick "sum" temporal-fold')
+        results = interpreter.current_stack()[-1]
+        assert isinstance(results, list)
+        assert len(results) >= 1
+
+    def test_temporal_operations_with_branching(self):
+        """Test temporal operations work correctly with timeline branching."""
+        # Create a timeline with branching
+        interpreter = self.execute_code('10 tick 20 tick branch "test" 30 tick "count" temporal-fold')
+        
+        # Test temporal-fold works with branches
+        results = interpreter.current_stack()[-1]
+        assert isinstance(results, list)
+        
+        # Test ripple works with branches - create fresh interpreter
+        interpreter = self.execute_code('10 tick 20 tick branch "test" 30 tick 1 rewind pop "push" 999 ripple')
+        # Should affect future moments in current branch
+
+    def parse_statement(self, code_str):
+        """Helper to parse a single statement."""
+        from chronostack.lexer import Lexer
+        from chronostack.parser import Parser
+        
+        lexer = Lexer(code_str)
+        tokens = lexer.tokenize()
+        parser = Parser(tokens)
+        ast = parser.parse()
+        return ast.statements[0]
 
     def test_unknown_operations(self):
         """Test unknown operation handling."""
