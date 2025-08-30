@@ -50,6 +50,10 @@ class Timeline:
         self.branches: Dict[str, List[Moment]] = {"main": self.moments}
         self.current_branch: str = "main"
         self.paradox_count: int = 0
+        # Track branch hierarchy for tree visualization
+        self.branch_parents: Dict[str, str] = {}  # child -> parent mapping
+        self.branch_children: Dict[str, List[str]] = {"main": []}  # parent -> children mapping
+        self.branch_origins: Dict[str, Tuple[str, int]] = {}  # branch -> (parent_branch, moment_index)
 
     def current_moment(self) -> Moment:
         """Get the current moment."""
@@ -144,6 +148,15 @@ class Timeline:
         # Create new branch with the starting moment
         new_branch_moments = [branch_start]
         self.branches[branch_name] = new_branch_moments
+
+        # Track branch hierarchy
+        parent_branch = self.current_branch
+        self.branch_parents[branch_name] = parent_branch
+        self.branch_origins[branch_name] = (parent_branch, self.current_index)
+        
+        if parent_branch not in self.branch_children:
+            self.branch_children[parent_branch] = []
+        self.branch_children[parent_branch].append(branch_name)
 
         # Switch to new branch
         self.current_branch = branch_name
@@ -495,6 +508,120 @@ class Timeline:
         # 3. Use domain-specific heuristics
         
         return deepcopy(original_stack)
+
+    def get_timeline_tree_visualization(self) -> str:
+        """
+        Generate ASCII tree visualization of timeline branches.
+        
+        Returns:
+            str: ASCII art representation of the timeline tree structure
+        """
+        lines = []
+        lines.append("Timeline Tree:")
+        lines.append("")
+        
+        # Start with main branch
+        self._render_branch_tree("main", "", True, lines, set())
+        
+        return "\n".join(lines)
+    
+    def _render_branch_tree(
+        self, 
+        branch_name: str, 
+        prefix: str, 
+        is_last: bool, 
+        lines: List[str],
+        visited: set
+    ) -> None:
+        """
+        Recursively render a branch and its children in the tree.
+        
+        Args:
+            branch_name: Name of the branch to render
+            prefix: Current indentation prefix
+            is_last: Whether this is the last child at this level
+            lines: List to append rendered lines to
+            visited: Set of already visited branches to prevent cycles
+        """
+        if branch_name in visited:
+            return
+        visited.add(branch_name)
+        
+        # Determine branch symbol and connection
+        connector = "└── " if is_last else "├── "
+        
+        # Get branch info
+        branch_moments = self.branches.get(branch_name, [])
+        moment_count = len(branch_moments)
+        
+        # Check for paradoxes in this branch
+        paradox_count = 0
+        for moment in branch_moments:
+            if "paradox" in moment.metadata:
+                paradox_count += 1
+        
+        # Format branch info
+        current_marker = " ← current" if branch_name == self.current_branch else ""
+        paradox_marker = f" [P:{paradox_count}]" if paradox_count > 0 else ""
+        origin_info = ""
+        
+        if branch_name in self.branch_origins:
+            parent_branch, origin_moment = self.branch_origins[branch_name]
+            origin_info = f" (from {parent_branch}@{origin_moment})"
+        
+        # Render this branch
+        branch_line = f"{prefix}{connector}{branch_name} ({moment_count} moments){origin_info}{paradox_marker}{current_marker}"
+        lines.append(branch_line)
+        
+        # Render moments in this branch if it's the current branch or has few moments
+        if branch_name == self.current_branch or moment_count <= 3:
+            moment_prefix = prefix + ("    " if is_last else "│   ")
+            for i, moment in enumerate(branch_moments):
+                is_current_moment = (branch_name == self.current_branch and i == self.current_index)
+                moment_marker = " ← " if is_current_moment else "   "
+                stack_display = self._format_stack_for_tree(moment.stack)
+                paradox_display = " [PARADOX]" if "paradox" in moment.metadata else ""
+                
+                lines.append(f"{moment_prefix}│ {moment_marker}M{moment.timestamp}: {stack_display}{paradox_display}")
+        
+        # Render children
+        children = self.branch_children.get(branch_name, [])
+        for i, child_branch in enumerate(children):
+            is_last_child = i == len(children) - 1
+            child_prefix = prefix + ("    " if is_last else "│   ")
+            self._render_branch_tree(child_branch, child_prefix, is_last_child, lines, visited)
+    
+    def _format_stack_for_tree(self, stack: List[Any]) -> str:
+        """Format stack for tree display (compact format)."""
+        if not stack:
+            return "[]"
+        
+        if len(stack) <= 3:
+            items = []
+            for item in stack:
+                if isinstance(item, str):
+                    items.append(f'"{item}"')
+                elif isinstance(item, list):
+                    items.append(f"[{len(item)}]")
+                else:
+                    items.append(str(item))
+            return f"[{' '.join(items)}]"
+        else:
+            # Show first 2 and last 1 with ellipsis
+            first_items = []
+            for item in stack[:2]:
+                if isinstance(item, str):
+                    first_items.append(f'"{item}"')
+                else:
+                    first_items.append(str(item))
+            
+            last_item = stack[-1]
+            if isinstance(last_item, str):
+                last_display = f'"{last_item}"'
+            else:
+                last_display = str(last_item)
+            
+            return f"[{' '.join(first_items)} ... {last_display}] ({len(stack)} items)"
 
     def get_timeline_info(self) -> Dict[str, Any]:
         """Get information about the current timeline state."""

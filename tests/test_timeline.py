@@ -892,3 +892,154 @@ class TestTimeline:
         resolved_moment = timeline.moments[paradox_moment]
         assert isinstance(resolved_moment.stack, list)
         assert len(resolved_moment.stack) >= 2  # Should maintain reasonable stack structure
+
+    def test_timeline_tree_visualization_single_branch(self):
+        """Test tree visualization with single branch."""
+        timeline = Timeline()
+        
+        # Create simple timeline
+        timeline.current_stack().extend([1, 2, 3])
+        timeline.tick()
+        timeline.current_stack().append(4)
+        timeline.tick()
+        
+        # Get visualization
+        tree_viz = timeline.get_timeline_tree_visualization()
+        assert isinstance(tree_viz, str)
+        assert "Timeline Tree:" in tree_viz
+        assert "main" in tree_viz
+        assert "moments" in tree_viz
+
+    def test_timeline_tree_visualization_multiple_branches(self):
+        """Test tree visualization with multiple branches."""
+        timeline = Timeline()
+        
+        # Create base timeline
+        timeline.current_stack().extend([10, 20])
+        timeline.tick()  # moment 1
+        
+        # Create first branch
+        first_branch = timeline.branch("feature-a")
+        timeline.current_stack().append(30)
+        timeline.tick()  # moment 1 in feature-a
+        
+        # Switch back to main and create another branch
+        timeline.current_branch = "main"
+        timeline.moments = timeline.branches["main"]
+        timeline.current_index = 1
+        
+        second_branch = timeline.branch("feature-b")
+        timeline.current_stack().append(40)
+        timeline.tick()  # moment 1 in feature-b
+        
+        # Get tree visualization
+        tree_viz = timeline.get_timeline_tree_visualization()
+        
+        # Verify structure
+        assert "Timeline Tree:" in tree_viz
+        assert "main" in tree_viz
+        assert "feature-a" in tree_viz
+        assert "feature-b" in tree_viz
+        assert "├──" in tree_viz or "└──" in tree_viz  # Tree connectors
+        assert "← current" in tree_viz  # Current branch marker
+
+    def test_timeline_tree_visualization_with_paradoxes(self):
+        """Test tree visualization shows paradoxes correctly."""
+        timeline = Timeline()
+        
+        # Create timeline with paradox
+        timeline.current_stack().append(100)
+        timeline.tick()
+        timeline.current_stack().append(200)
+        timeline.tick()
+        
+        # Create paradox
+        timeline.send(999, 1)
+        
+        tree_viz = timeline.get_timeline_tree_visualization()
+        
+        # Should show paradox marker
+        assert "[P:1]" in tree_viz or "[PARADOX]" in tree_viz
+
+    def test_timeline_tree_formatting_helpers(self):
+        """Test tree formatting helper methods."""
+        timeline = Timeline()
+        
+        # Test stack formatting
+        empty_stack = timeline._format_stack_for_tree([])
+        assert empty_stack == "[]"
+        
+        simple_stack = timeline._format_stack_for_tree([1, 2, 3])
+        assert simple_stack == "[1 2 3]"
+        
+        string_stack = timeline._format_stack_for_tree(["hello", "world"])
+        assert string_stack == '["hello" "world"]'
+        
+        large_stack = timeline._format_stack_for_tree([1, 2, 3, 4, 5, 6])
+        assert "..." in large_stack
+        assert "6 items" in large_stack
+
+    def test_timeline_tree_branch_hierarchy(self):
+        """Test that branch hierarchy is tracked correctly."""
+        timeline = Timeline()
+        
+        # Create nested branches
+        timeline.current_stack().append(1)
+        timeline.tick()
+        
+        # Branch A from main
+        branch_a = timeline.branch("branch-a")
+        timeline.current_stack().append(2)
+        timeline.tick()
+        
+        # Branch B from A
+        branch_b = timeline.branch("branch-b")
+        timeline.current_stack().append(3)
+        timeline.tick()
+        
+        # Verify hierarchy tracking
+        assert timeline.branch_parents["branch-a"] == "main"
+        assert timeline.branch_parents["branch-b"] == "branch-a"
+        assert "branch-a" in timeline.branch_children["main"]
+        assert "branch-b" in timeline.branch_children["branch-a"]
+        
+        # Verify origins are tracked
+        assert timeline.branch_origins["branch-a"] == ("main", 1)
+        assert timeline.branch_origins["branch-b"] == ("branch-a", 1)
+
+    def test_timeline_tree_complex_scenario(self):
+        """Test tree visualization with complex branching scenario."""
+        timeline = Timeline()
+        
+        # Create complex timeline structure
+        timeline.current_stack().extend([1, 2])
+        timeline.tick()  # main@1
+        timeline.tick()  # main@2
+        
+        # Branch from main@2
+        timeline.branch("experimental")
+        timeline.current_stack().append(100)
+        timeline.tick()  # experimental@1
+        
+        # Create paradox in experimental
+        timeline.send(999, 1)
+        
+        # Go back to main and create another branch
+        timeline.current_branch = "main"
+        timeline.moments = timeline.branches["main"] 
+        timeline.current_index = 1  # Go to main@1
+        
+        timeline.branch("hotfix")
+        timeline.current_stack().extend([50, 60])
+        timeline.tick()  # hotfix@1
+        
+        # Get full tree visualization
+        tree_viz = timeline.get_timeline_tree_visualization()
+        
+        # Verify comprehensive structure
+        assert "main" in tree_viz
+        assert "experimental" in tree_viz
+        assert "hotfix" in tree_viz
+        assert "[P:1]" in tree_viz  # Paradox in experimental
+        assert "← current" in tree_viz  # Current branch marker
+        assert "from main@" in tree_viz  # Origin information

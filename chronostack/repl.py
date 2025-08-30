@@ -103,7 +103,7 @@ ChronoStack REPL Commands:
   .help      - Show this help
   .quit      - Exit the REPL
   .stack     - Show current stack with details
-  .timeline  - Show timeline with all moments
+  .timeline  - Show timeline (tree view for multiple branches)
   .branches  - Show branch structure
   .moment    - Show current moment info
   .words     - Show defined words
@@ -172,15 +172,20 @@ Examples:
             return str(item)
 
     def show_timeline(self) -> None:
-        """Show timeline with all moments."""
+        """Show timeline with ASCII tree visualization."""
         timeline = self.interpreter.timeline
-        print(f"Timeline (branch: {timeline.current_branch}):")
-
-        for i, moment in enumerate(timeline.moments):
-            marker = " <-- current" if i == timeline.current_index else ""
-            stack_str = self.format_stack_list(moment.stack)
-            paradox = " [PARADOX]" if "paradox" in moment.metadata else ""
-            print(f"  Moment {i}: {stack_str}{paradox}{marker}")
+        
+        # Check if there are multiple branches - use tree view if so
+        if len(timeline.branches) > 1:
+            print(timeline.get_timeline_tree_visualization())
+        else:
+            # Use simple linear view for single branch
+            print(f"Timeline (branch: {timeline.current_branch}):")
+            for i, moment in enumerate(timeline.moments):
+                marker = " <-- current" if i == timeline.current_index else ""
+                stack_str = self.format_stack_list(moment.stack)
+                paradox = " [PARADOX]" if "paradox" in moment.metadata else ""
+                print(f"  Moment {i}: {stack_str}{paradox}{marker}")
 
     def format_stack_list(self, stack: List) -> str:
         """Format a stack list for display."""
