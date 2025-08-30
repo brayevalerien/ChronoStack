@@ -319,6 +319,10 @@ class Timeline:
             moment = self.moments[i]
             if operation == "push":
                 moment.stack.append(deepcopy(value))
-            elif (operation == "multiply" and moment.stack
-                  and isinstance(moment.stack[-1], (int, float)) and isinstance(value, (int, float))):
+            elif (
+                operation == "multiply"
+                and moment.stack
+                and isinstance(moment.stack[-1], (int, float))
+                and isinstance(value, (int, float))
+            ):
                 moment.stack[-1] *= value

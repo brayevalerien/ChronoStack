@@ -331,3 +331,36 @@ class TestParser:
         assert isinstance(ast.statements[0], LiteralNode)
         assert isinstance(ast.statements[1], OperationNode)
         assert isinstance(ast.statements[2], OperationNode)
+
+    def test_parser_edge_cases(self):
+        """Test parser edge cases for coverage."""
+        from chronostack.lexer import Token, TokenType
+
+        # Test peek_token with offset beyond bounds
+        parser = Parser([Token(TokenType.NUMBER, "42", 1, 1), Token(TokenType.EOF, "", 1, 3)])
+
+        # Should handle offset beyond bounds gracefully
+        peek_token = parser.peek_token(5)  # Way beyond bounds
+        assert peek_token.type == TokenType.EOF
+
+        # Test current_token at end
+        parser.position = 99  # Beyond end
+        current = parser.current_token()
+        assert current.type == TokenType.EOF
+
+    def test_parser_error_handling(self):
+        """Test various parser error conditions."""
+        import pytest
+
+        from chronostack.lexer import Token, TokenType
+        from chronostack.parser import ParseError
+
+        # Test consume with wrong token type
+        parser = Parser([Token(TokenType.NUMBER, "42", 1, 1), Token(TokenType.EOF, "", 1, 3)])
+        with pytest.raises(ParseError, match="Expected"):
+            parser.consume(TokenType.STRING, "Expected string")
+
+        # Test error method
+        parser = Parser([Token(TokenType.NUMBER, "42", 1, 1), Token(TokenType.EOF, "", 1, 3)])
+        with pytest.raises(ParseError, match="Test error"):
+            parser.error("Test error")

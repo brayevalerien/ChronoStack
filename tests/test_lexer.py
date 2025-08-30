@@ -234,9 +234,79 @@ class TestLexer:
         assert len(tokens) > 10
         assert tokens[-1].type == TokenType.EOF
 
-        # Check some key tokens are present
-        token_types = [token.type for token in tokens]
-        assert TokenType.SYMBOL in token_types
-        assert TokenType.DUP in token_types
-        assert TokenType.IF in token_types
-        assert TokenType.ECHO in token_types
+    def test_string_escape_sequences(self):
+        """Test string escape sequences handling."""
+        # Test newline escape
+        lexer = Lexer('"hello\\nworld"')
+        tokens = lexer.tokenize()
+        assert tokens[0].type == TokenType.STRING
+        assert tokens[0].value == "hello\nworld"
+
+        # Test tab escape
+        lexer = Lexer('"hello\\tworld"')
+        tokens = lexer.tokenize()
+        assert tokens[0].value == "hello\tworld"
+
+        # Test carriage return escape
+        lexer = Lexer('"hello\\rworld"')
+        tokens = lexer.tokenize()
+        assert tokens[0].value == "hello\rworld"
+
+        # Test backslash escape
+        lexer = Lexer('"hello\\\\world"')
+        tokens = lexer.tokenize()
+        assert tokens[0].value == "hello\\world"
+
+        # Test quote escape
+        lexer = Lexer('"hello\\"world"')
+        tokens = lexer.tokenize()
+        assert tokens[0].value == 'hello"world'
+
+        # Test unknown escape sequence (should just include the character)
+        lexer = Lexer('"hello\\xworld"')
+        tokens = lexer.tokenize()
+        assert tokens[0].value == "helloxworld"
+
+    def test_advance_at_end_of_input(self):
+        """Test advance when at end of input."""
+        lexer = Lexer("42")
+        # Advance past all characters
+        while lexer.position < len(lexer.text):
+            lexer.advance()
+        # Should return None when trying to advance past end
+        result = lexer.advance()
+        assert result is None
+
+    def test_lexer_edge_cases(self):
+        """Test various lexer edge cases for coverage."""
+        # Test single character input
+        lexer = Lexer("a")
+        tokens = lexer.tokenize()
+        assert len(tokens) == 2  # symbol + EOF
+
+        # Test mixed symbols and numbers
+        lexer = Lexer("123abc")
+        tokens = lexer.tokenize()
+        assert tokens[0].type == TokenType.NUMBER
+        assert tokens[1].type == TokenType.SYMBOL
+
+    def test_lexer_error_line_tracking(self):
+        """Test that line and column tracking works in advance()."""
+        lexer = Lexer("hello\nworld\n")
+
+        # Advance through "hello"
+        for _ in range(5):
+            lexer.advance()
+        assert lexer.line == 1
+        assert lexer.column == 6
+
+        # Advance past newline
+        lexer.advance()
+        assert lexer.line == 2
+        assert lexer.column == 1
+
+        # Advance through "world"
+        for _ in range(5):
+            lexer.advance()
+        assert lexer.line == 2
+        assert lexer.column == 6

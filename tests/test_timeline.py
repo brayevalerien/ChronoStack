@@ -458,3 +458,43 @@ class TestTimeline:
 
         info = timeline.get_timeline_info()
         assert info["branch_count"] == 2
+
+    def test_timeline_edge_cases(self):
+        """Test timeline edge cases for coverage."""
+        timeline = Timeline()
+
+        # Test has_paradoxes when no paradoxes exist
+        assert not timeline.has_paradoxes()
+
+        # Test current_branch property
+        assert timeline.current_branch == "main"
+
+        # Test branch creation with auto-generated name
+        auto_branch = timeline.branch()  # No name provided
+        assert auto_branch is not None
+        assert auto_branch != "main"
+
+    def test_timeline_branching_edge_cases(self):
+        """Test edge cases in timeline branching."""
+        timeline = Timeline()
+        timeline.current_stack().extend([1, 2, 3])
+        timeline.tick()
+
+        # Test merging when target branch doesn't exist
+        success = timeline.merge("nonexistent")
+        assert not success
+
+        # Test merging with invalid target
+        success = timeline.merge(None)
+        assert not success
+
+    def test_timeline_paradox_resolution_edge_cases(self):
+        """Test edge cases in paradox resolution."""
+        timeline = Timeline()
+
+        # Test resolve_paradox with invalid index
+        success = timeline.resolve_paradox(-1)  # Invalid index
+        assert not success
+
+        success = timeline.resolve_paradox(999)  # Out of bounds
+        assert not success

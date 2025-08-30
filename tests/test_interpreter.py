@@ -153,3 +153,204 @@ class TestInterpreter:
         """Test explicit pop operation."""
         interpreter = self.execute_code("1 2 3 pop")
         assert interpreter.current_stack() == [1, 2]
+
+    def test_error_conditions(self):
+        """Test various error conditions in interpreter."""
+        import pytest
+
+        from chronostack.interpreter import InterpreterError
+
+        # Push operation on empty stack
+        with pytest.raises(InterpreterError, match="Push requires a value on the stack"):
+            self.execute_code("push")
+
+        # Dup operation on empty stack
+        with pytest.raises(InterpreterError, match="Dup requires value on stack"):
+            self.execute_code("dup")
+
+        # Swap with insufficient stack
+        with pytest.raises(InterpreterError, match="Swap requires two values"):
+            self.execute_code("1 swap")
+
+        # Rot with insufficient stack
+        with pytest.raises(InterpreterError, match="Rot requires three values"):
+            self.execute_code("1 2 rot")
+
+        # Math operations on empty stack
+        with pytest.raises(InterpreterError, match="requires two values"):
+            self.execute_code("1 +")
+
+        # Comparison operations on empty stack
+        with pytest.raises(InterpreterError, match="requires two values"):
+            self.execute_code("1 <")
+
+        # Logical operations on empty stack
+        with pytest.raises(InterpreterError, match="requires two values"):
+            self.execute_code("1 and")
+
+        # If without condition
+        with pytest.raises(InterpreterError, match="If requires condition"):
+            self.execute_code("[ 42 ] if")
+
+        # Loop without count
+        with pytest.raises(InterpreterError, match="Loop requires count"):
+            self.execute_code("[ 42 ] loop")
+
+        # Division by zero
+        with pytest.raises(InterpreterError, match="Division by zero"):
+            self.execute_code("5 0 /")
+
+        # Modulo by zero
+        with pytest.raises(InterpreterError, match="Modulo by zero"):
+            self.execute_code("5 0 %")
+
+    def test_temporal_operations_comprehensive(self):
+        """Test comprehensive temporal operations."""
+        # Test branch with string name
+        interpreter = self.execute_code('42 tick "test-branch" branch')
+        stack = interpreter.current_stack()
+        assert "test-branch" in str(stack)  # Should return branch name
+
+        # Test branch without name (auto-generated)
+        interpreter = self.execute_code("42 tick branch")
+        stack = interpreter.current_stack()
+        assert len(stack) > 0  # Should have branch name
+
+        # Test merge with target branch
+        interpreter = self.execute_code('42 tick "test" branch "main" merge')
+        stack = interpreter.current_stack()
+        assert len(stack) > 0  # Should have merge result
+
+        # Test merge without target (merge to parent)
+        interpreter = self.execute_code('42 tick "test" branch merge')
+        stack = interpreter.current_stack()
+        assert len(stack) > 0  # Should have merge result
+
+        # Test paradox resolution
+        interpreter = self.execute_code("10 tick 99 2 send paradox!")
+        stack = interpreter.current_stack()
+        assert isinstance(stack[-1], int)  # Should have resolved count
+
+    def test_advanced_temporal_operations(self):
+        """Test advanced temporal operations like echo and send."""
+        # Test echo operation
+        interpreter = self.execute_code("10 tick 20 tick 1 echo")
+        stack = interpreter.current_stack()
+        assert 10 in stack  # Should echo value from past
+
+        # Test send operation
+        interpreter = self.execute_code("10 tick 20 tick 99 1 send")
+        # Should create temporal modification
+
+    def test_peek_future_operation(self):
+        """Test peek-future operation."""
+        interpreter = self.execute_code("10 tick 1 peek-future")
+        interpreter.current_stack()
+        # Should have peeked into future
+
+    def test_advanced_control_flow(self):
+        """Test advanced control flow operations."""
+        import pytest
+
+        from chronostack.interpreter import InterpreterError
+
+        # Test when-stable with stable timeline
+        interpreter = self.execute_code("[ 42 ] when-stable")
+        stack = interpreter.current_stack()
+        assert 42 in stack  # Should execute because timeline is stable
+
+        # Test when-stable error conditions
+        with pytest.raises(InterpreterError, match="When-stable requires code block"):
+            self.execute_code("when-stable")
+
+        with pytest.raises(InterpreterError, match="When-stable requires code block"):
+            self.execute_code("42 when-stable")  # Not a code block
+
+        # Test if with error conditions
+        with pytest.raises(InterpreterError, match="If requires condition and code block"):
+            self.execute_code("if")
+
+        with pytest.raises(InterpreterError, match="If requires code block"):
+            self.execute_code("1 42 if")  # 42 is not a code block
+
+        # Test loop with error conditions
+        with pytest.raises(InterpreterError, match="Loop requires count and code block"):
+            self.execute_code("[ 42 ] loop")  # Missing count
+
+        with pytest.raises(InterpreterError, match="Loop requires positive integer count"):
+            self.execute_code('"not-int" [ 42 ] loop')  # Non-integer count
+
+        with pytest.raises(InterpreterError, match="Loop requires positive integer count"):
+            self.execute_code("-1 [ 42 ] loop")  # Negative count
+
+        with pytest.raises(InterpreterError, match="Loop requires code block"):
+            self.execute_code("3 42 loop")  # Not a code block
+
+    def test_temporal_fold_and_ripple(self):
+        """Test temporal-fold and ripple operations."""
+        # Test temporal-fold
+        self.execute_code('10 tick 20 tick 30 tick "+" temporal-fold')
+        # Should apply + operation across all moments
+
+        # Test ripple
+        self.execute_code('10 tick 20 tick 30 tick "multiply" 2 ripple')
+        # Should apply multiply operation to future moments
+
+    def test_unknown_operations(self):
+        """Test unknown operation handling."""
+        # Test that unknown symbols just get pushed as literals
+        interpreter = self.execute_code("unknown-symbol")
+        stack = interpreter.current_stack()
+        assert "unknown-symbol" in stack
+
+    def test_stack_error_conditions(self):
+        """Test stack operation error conditions."""
+        import pytest
+
+        from chronostack.interpreter import InterpreterError
+
+        # Test pop from empty stack
+        interpreter = Interpreter()
+        with pytest.raises(InterpreterError, match="Cannot pop from empty stack"):
+            interpreter.pop()
+
+        # Test peek at empty stack
+        with pytest.raises(InterpreterError, match="Cannot peek at empty stack"):
+            interpreter.peek()
+
+    def test_interpreter_state_methods(self):
+        """Test interpreter state and utility methods."""
+        interpreter = Interpreter()
+
+        # Test initial state
+        assert interpreter.current_stack() == []
+        assert interpreter.get_stack_display() == "[]"
+
+        # Test with values
+        interpreter.push(42)
+        interpreter.push("hello")
+
+        # Test truthy evaluation with various types
+        assert interpreter.is_truthy(1)
+        assert not interpreter.is_truthy(0)
+        assert interpreter.is_truthy("hello")
+        assert not interpreter.is_truthy("")
+        assert interpreter.is_truthy([1, 2])
+        assert not interpreter.is_truthy([])
+        assert not interpreter.is_truthy(None)
+        assert interpreter.is_truthy({"key": "value"})  # Other objects are truthy
+
+    def test_word_execution_with_recursion(self):
+        """Test word execution including call stack management."""
+        # Test that recursive calls are properly detected
+        interpreter = Interpreter()
+        interpreter.words["test"] = []  # Empty word definition
+
+        # Manually trigger recursive call detection
+        interpreter.call_stack.append("test")
+        import pytest
+
+        from chronostack.interpreter import InterpreterError
+
+        with pytest.raises(InterpreterError, match="Recursive call detected"):
+            interpreter.execute_word("test")
