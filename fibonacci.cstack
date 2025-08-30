@@ -1,0 +1,10 @@
+
+# Fibonacci using temporal mechanics
+:fib
+    dup 2 < if [ pop 1 ] [
+        dup 1 - echo 2 - echo +
+    ] ;
+    
+# Calculate fibonacci of 5
+5 fib
+echo 0  # Show the result
