@@ -1,0 +1,28 @@
+# Recursive function with temporal mechanics
+# Factorial calculation using time travel
+
+:temporal-factorial
+    # Base case: if n <= 1, return 1
+    dup 1 <= if [
+        pop 1
+    ] [
+        # Recursive case: n * factorial(n-1)
+        dup 1 -           # Calculate n-1
+        tick              # Save current state
+        temporal-factorial # Recursive call
+        swap *            # Multiply n * factorial(n-1)
+    ] ;
+
+# Calculate 5!
+5 temporal-factorial
+
+# Show the computation trail
+"Final result: " swap +
+"Computation used " 
+"count" temporal-fold pop # Count total moments used
+" moments in time"
++ + 
+
+# Use ripple to mark all moments with computation step info
+0 rewind
+"push" "step" ripple

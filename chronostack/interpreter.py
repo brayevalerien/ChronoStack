@@ -106,7 +106,7 @@ class Interpreter:
         elif isinstance(statement, WordDefinitionNode):
             self.execute_word_definition(statement)
         else:
-            raise InterpreterError(f"Unknown statement type: {type(statement)}")
+            raise self._create_error(f"Unknown statement type: {type(statement)}")
 
     def execute_literal(self, literal: LiteralNode) -> None:
         """Execute a literal value."""
@@ -120,7 +120,7 @@ class Interpreter:
                 # Push symbol as literal value
                 self.push(literal.value)
         else:
-            raise InterpreterError(f"Unknown literal type: {literal.token_type}")
+            raise self._create_error(f"Unknown literal type: {literal.token_type}")
 
     def execute_operation(self, operation: OperationNode) -> None:
         """Execute an operation."""
@@ -130,7 +130,7 @@ class Interpreter:
         if op == "push":
             # Push operation requires a value from the stack
             if not self.current_stack():
-                raise InterpreterError("Push requires a value on the stack")
+                raise self._create_error("Push requires a value on the stack")
             # Push duplicates the top value (like dup)
             value = self.peek()
             self.push(value)
@@ -141,13 +141,13 @@ class Interpreter:
 
         elif op == "dup":
             if not self.current_stack():
-                raise InterpreterError("Dup requires value on stack")
+                raise self._create_error("Dup requires value on stack")
             value = self.peek()
             self.push(value)
 
         elif op == "swap":
             if len(self.current_stack()) < 2:
-                raise InterpreterError("Swap requires two values on stack")
+                raise self._create_error("Swap requires two values on stack")
             a = self.pop()
             b = self.pop()
             self.push(a)
@@ -155,7 +155,7 @@ class Interpreter:
 
         elif op == "rot":
             if len(self.current_stack()) < 3:
-                raise InterpreterError("Rot requires three values on stack")
+                raise self._create_error("Rot requires three values on stack")
             c = self.pop()  # top
             b = self.pop()  # middle
             a = self.pop()  # bottom
@@ -170,19 +170,19 @@ class Interpreter:
 
         elif op == "rewind":
             if not self.current_stack():
-                raise InterpreterError("Rewind requires number of steps")
+                raise self._create_error("Rewind requires number of steps")
             steps = self.pop()
             if not isinstance(steps, int) or steps < 0:
-                raise InterpreterError("Rewind requires positive integer")
+                raise self._create_error("Rewind requires positive integer")
             timestamp = self.timeline.rewind(steps)
             self.push(timestamp)
 
         elif op == "peek-future":
             if not self.current_stack():
-                raise InterpreterError("Peek-future requires number of steps")
+                raise self._create_error("Peek-future requires number of steps")
             steps = self.pop()
             if not isinstance(steps, int) or steps < 0:
-                raise InterpreterError("Peek-future requires positive integer")
+                raise self._create_error("Peek-future requires positive integer")
             future_moment = self.timeline.peek_future(steps)
             if future_moment:
                 # Push the top value from the future moment
@@ -222,40 +222,40 @@ class Interpreter:
 
         elif op == "echo":
             if not self.current_stack():
-                raise InterpreterError("Echo requires number of steps back")
+                raise self._create_error("Echo requires number of steps back")
             steps = self.pop()
             if not isinstance(steps, int) or steps < 0:
-                raise InterpreterError("Echo requires positive integer")
+                raise self._create_error("Echo requires positive integer")
             value = self.timeline.echo(steps)
             self.push(value)
 
         elif op == "send":
             if len(self.current_stack()) < 2:
-                raise InterpreterError("Send requires value and number of steps")
+                raise self._create_error("Send requires value and number of steps")
             steps = self.pop()
             value = self.pop()
             if not isinstance(steps, int) or steps < 0:
-                raise InterpreterError("Send requires positive integer steps")
+                raise self._create_error("Send requires positive integer steps")
             success = self.timeline.send(value, steps)
             self.push(success)
 
         elif op == "temporal-fold":
             if not self.current_stack():
-                raise InterpreterError("Temporal-fold requires operation string")
+                raise self._create_error("Temporal-fold requires operation string")
             operation = self.pop()
             if not isinstance(operation, str):
-                raise InterpreterError("Temporal-fold requires string operation")
+                raise self._create_error("Temporal-fold requires string operation")
             results = self.timeline.temporal_fold(operation)
             # Push results as a list
             self.push(results)
 
         elif op == "ripple":
             if len(self.current_stack()) < 2:
-                raise InterpreterError("Ripple requires operation and value")
+                raise self._create_error("Ripple requires operation and value")
             value = self.pop()
             operation = self.pop()
             if not isinstance(operation, str):
-                raise InterpreterError("Ripple requires string operation")
+                raise self._create_error("Ripple requires string operation")
             self.timeline.ripple(operation, value)
 
         # Math operations
@@ -275,19 +275,19 @@ class Interpreter:
             self.execute_control_flow(op)
 
         else:
-            raise InterpreterError(f"Unknown operation: {op}")
+            raise self._create_error(f"Unknown operation: {op}")
 
     def execute_math_operation(self, op: str) -> None:
         """Execute a math operation."""
         if len(self.current_stack()) < 2:
-            raise InterpreterError(f"Math operation '{op}' requires two values")
+            raise self._create_error(f"Math operation '{op}' requires two values")
 
         b = self.pop()
         a = self.pop()
 
         # Ensure numeric types
         if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
-            raise InterpreterError(f"Math operation '{op}' requires numeric values")
+            raise self._create_error(f"Math operation '{op}' requires numeric values")
 
         if op == "+":
             result = a + b
@@ -297,21 +297,21 @@ class Interpreter:
             result = a * b
         elif op == "/":
             if b == 0:
-                raise InterpreterError("Division by zero")
+                raise self._create_error("Division by zero")
             result = a / b
         elif op == "%":
             if b == 0:
-                raise InterpreterError("Modulo by zero")
+                raise self._create_error("Modulo by zero")
             result = a % b
         else:
-            raise InterpreterError(f"Unknown math operation: {op}")
+            raise self._create_error(f"Unknown math operation: {op}")
 
         self.push(result)
 
     def execute_comparison_operation(self, op: str) -> None:
         """Execute a comparison operation."""
         if len(self.current_stack()) < 2:
-            raise InterpreterError(f"Comparison '{op}' requires two values")
+            raise self._create_error(f"Comparison '{op}' requires two values")
 
         b = self.pop()
         a = self.pop()
@@ -323,7 +323,7 @@ class Interpreter:
         elif op == "=":
             result = 1 if a == b else 0
         else:
-            raise InterpreterError(f"Unknown comparison: {op}")
+            raise self._create_error(f"Unknown comparison: {op}")
 
         self.push(result)
 
@@ -331,14 +331,14 @@ class Interpreter:
         """Execute a logical operation."""
         if op == "not":
             if not self.current_stack():
-                raise InterpreterError("Not requires one value")
+                raise self._create_error("Not requires one value")
             value = self.pop()
             result = 1 if not self.is_truthy(value) else 0
             self.push(result)
 
         else:  # and, or
             if len(self.current_stack()) < 2:
-                raise InterpreterError(f"Logical '{op}' requires two values")
+                raise self._create_error(f"Logical '{op}' requires two values")
             b = self.pop()
             a = self.pop()
 
@@ -347,7 +347,7 @@ class Interpreter:
             elif op == "or":
                 result = 1 if self.is_truthy(a) or self.is_truthy(b) else 0
             else:
-                raise InterpreterError(f"Unknown logical operation: {op}")
+                raise self._create_error(f"Unknown logical operation: {op}")
 
             self.push(result)
 
@@ -366,12 +366,12 @@ class Interpreter:
         """Execute control flow operations."""
         if op == "if":
             if len(self.current_stack()) < 2:
-                raise InterpreterError("If requires condition and code block")
+                raise self._create_error("If requires condition and code block")
             code_block = self.pop()
             condition = self.pop()
 
             if not isinstance(code_block, list):
-                raise InterpreterError("If requires code block (list of statements)")
+                raise self._create_error("If requires code block (list of statements)")
 
             if self.is_truthy(condition):
                 for statement in code_block:
@@ -379,14 +379,14 @@ class Interpreter:
 
         elif op == "loop":
             if len(self.current_stack()) < 2:
-                raise InterpreterError("Loop requires count and code block")
+                raise self._create_error("Loop requires count and code block")
             code_block = self.pop()
             count = self.pop()
 
             if not isinstance(count, int) or count < 0:
-                raise InterpreterError("Loop requires positive integer count")
+                raise self._create_error("Loop requires positive integer count")
             if not isinstance(code_block, list):
-                raise InterpreterError("Loop requires code block (list of statements)")
+                raise self._create_error("Loop requires code block (list of statements)")
 
             for _ in range(count):
                 for statement in code_block:
@@ -394,18 +394,18 @@ class Interpreter:
 
         elif op == "when-stable":
             if not self.current_stack():
-                raise InterpreterError("When-stable requires code block")
+                raise self._create_error("When-stable requires code block")
             code_block = self.pop()
 
             if not isinstance(code_block, list):
-                raise InterpreterError("When-stable requires code block (list of statements)")
+                raise self._create_error("When-stable requires code block (list of statements)")
 
             if not self.timeline.has_paradoxes():
                 for statement in code_block:
                     self.execute_statement(statement)
 
         else:
-            raise InterpreterError(f"Unknown control flow: {op}")
+            raise self._create_error(f"Unknown control flow: {op}")
 
     def execute_code_block(self, code_block: CodeBlockNode) -> None:
         """Execute a code block (push it as a list of statements)."""
@@ -419,11 +419,11 @@ class Interpreter:
     def execute_word(self, word_name: str) -> None:
         """Execute a user-defined word."""
         if word_name not in self.words:
-            raise InterpreterError(f"Unknown word: {word_name}")
+            raise self._create_error(f"Unknown word: {word_name}")
 
         # Check for recursion
         if word_name in self.call_stack:
-            raise InterpreterError(f"Recursive call detected: {word_name}")
+            raise self._create_error(f"Recursive call detected: {word_name}")
 
         self.call_stack.append(word_name)
         try:

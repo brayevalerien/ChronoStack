@@ -1,0 +1,42 @@
+# Multi-dimensional timeline exploration
+# Creates complex branching with cross-branch communication
+
+# Create base timeline with initial data
+1 2 3 tick
+"Base established" tick
+
+# Create dimension A
+"dimension-a" branch
+10 * tick         # Multiply by 10: [1, 2, 30]  
+"A-step-1" tick   # Mark progress
+
+# Create sub-branch from A
+"dimension-a-1" branch
+100 + tick        # Add 100: [1, 2, 130]
+"A1-complete" tick
+
+# Go back to A and create another sub-branch
+"dimension-a" merge
+5 + tick          # Add 5: [1, 2, 35]
+"dimension-a-2" branch
+50 * tick         # Multiply by 50: [1, 2, 1750]
+
+# Create dimension B from original base
+"main" merge
+2 rewind          # Go back to base
+"dimension-b" branch
+2 ^ tick          # Square: [1, 2, 9]
+"B-step-1" tick
+
+# Use temporal-fold to analyze across all dimensions
+"count" temporal-fold   # Count moments per branch
+"Total moments across all dimensions: " swap +
+tick
+
+# Use send to create cross-dimensional effects
+999 3 send        # Send value back across dimensions
+"Cross-dimensional signal sent" tick
+
+# Resolve any paradoxes from cross-dimensional interference
+paradox!
+"Paradox resolution count: " swap +

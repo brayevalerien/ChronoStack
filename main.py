@@ -67,25 +67,20 @@ def show_timeline_visualization(interpreter: Interpreter) -> None:
     print("\nTimeline Visualization:")
     print("=" * 50)
 
-    # Show current branch
-    print(f"Current branch: {timeline.current_branch}")
-    print(f"Current moment: {timeline.current_index}")
-
-    # Show moments
-    print("\nMoments:")
-    for i, moment in enumerate(timeline.moments):
-        marker = ">>>" if i == timeline.current_index else "   "
-        paradox = " [PARADOX]" if "paradox" in moment.metadata else ""
-        stack_str = format_stack_for_viz(moment.stack)
-        print(f"{marker} {i:2d}: {stack_str}{paradox}")
-
-    # Show branch info
-    branch_info = timeline.get_branch_info()
-    if len(branch_info) > 1:
-        print("\nBranches:")
-        for branch_name, info in branch_info.items():
-            current = " (current)" if info["current"] else ""
-            print(f"  {branch_name}: {info['moment_count']} moments{current}")
+    # Use tree visualization for multiple branches, simple view for single branch
+    if len(timeline.branches) > 1:
+        print(timeline.get_timeline_tree_visualization())
+    else:
+        # Simple linear view for single branch
+        print(f"Current branch: {timeline.current_branch}")
+        print(f"Current moment: {timeline.current_index}")
+        
+        print("\nMoments:")
+        for i, moment in enumerate(timeline.moments):
+            marker = ">>>" if i == timeline.current_index else "   "
+            paradox = " [PARADOX]" if "paradox" in moment.metadata else ""
+            stack_str = format_stack_for_viz(moment.stack)
+            print(f"{marker} {i:2d}: {stack_str}{paradox}")
 
     # Show timeline info
     timeline_info = timeline.get_timeline_info()

@@ -1,0 +1,48 @@
+# Temporal debugging example
+# Shows how to use timeline features for program analysis
+
+# Create a program with intentional issues
+:buggy-function
+    10 20 +        # Simple addition
+    tick           # Save state
+    dup 2 /        # Divide by 2
+    tick           # Save state
+    3 *            # Multiply by 3
+    tick           # Save state
+    0 swap /       # Division by zero! (creates error)
+    tick ;
+
+# Set up error handling and debugging
+"Starting buggy computation..."
+tick
+
+# Try to run the buggy function
+# (This will create an error, but we can analyze it)
+# buggy-function   # Commented out to avoid crash
+
+# Instead, let's simulate the steps manually for debugging
+10 20 + tick       # Step 1: [30]
+dup 2 / tick       # Step 2: [30, 15]  
+3 * tick           # Step 3: [30, 45]
+
+# Now we can analyze the timeline
+"Analysis: "
+"max" temporal-fold   # Find maximum values
+"Maximum value across timeline: " swap +
+tick
+
+"sum" temporal-fold   # Sum all values
+"Total sum across timeline: " swap +
+tick
+
+# Use rewind to examine specific moments
+"Examining moment 1: "
+2 rewind
+0 echo  # Get value from current moment
+"Value was: " swap +
+tick
+
+# Use peek-future to predict outcomes
+"If we continue from here: "
+1 peek-future
+"Future value would be: " swap +

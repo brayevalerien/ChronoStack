@@ -1,0 +1,24 @@
+# Time loop demonstration using send and echo
+# Creates a stable causal loop
+
+# Set up initial conditions
+42 tick
+100 tick
+
+# Create a self-reinforcing loop
+# Send current value back in time
+dup 1 send  # Send top value back 1 moment
+
+# The value we just sent becomes the basis for our calculation
+1 echo  # Get the value from 1 moment ago
+2 *     # Double it
+tick
+
+# Verify the loop is stable
+"Loop established. Values: " 
+2 echo +  # Add value from 2 moments ago
+1 echo +  # Add value from 1 moment ago
+0 echo +  # Add current value
+
+# Resolve any paradoxes created by the loop
+paradox!

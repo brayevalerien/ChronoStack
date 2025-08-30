@@ -1,0 +1,31 @@
+# Advanced timeline branching with complex merging
+# Demonstrates sophisticated temporal mechanics
+
+# Setup base timeline with data
+10 20 30 tick
+"Processing data..." tick
+
+# Create experimental branch
+"experiment-a" branch
+dup *  # Square the top value (30 * 30 = 900)
+tick
+
+# Create another experimental branch from the squared result
+"experiment-b" branch  
+2 /  # Divide by 2 (900 / 2 = 450)
+"Result A: " swap + tick
+
+# Go back to experiment-a and try different approach
+"experiment-a" merge
+100 + tick  # Add 100 instead (900 + 100 = 1000)
+
+# Create third branch for comparison
+"comparison" branch
+3 * tick  # Multiply by 3 (1000 * 3 = 3000)
+
+# Merge all results back to main
+"main" merge
+
+# Use temporal-fold to analyze all timeline results
+"max" temporal-fold  # Find maximum value across all moments
+"Best result found: " swap +
