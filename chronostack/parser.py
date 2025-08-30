@@ -149,7 +149,7 @@ class Parser:
     def parse_word_definition(self) -> WordDefinitionNode:
         """Parse a word definition :name ... ;"""
         symbol_token = self.consume(TokenType.SYMBOL, "Expected symbol for word definition")
-        name = symbol_token.value
+        name = symbol_token.value[1:]  # Remove the ':' prefix
 
         body = []
         self.skip_newlines()
@@ -257,8 +257,6 @@ class Parser:
         bracket_depth = 0
 
         while not self.match(TokenType.EOF):
-            token = self.current_token()
-
             if self.match(TokenType.SEMICOLON) and bracket_depth == 0:
                 found_semicolon = True
                 break

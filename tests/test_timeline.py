@@ -402,8 +402,8 @@ class TestTimeline:
 
         assert "main" in branch_info
         assert "test" in branch_info
-        assert branch_info["test"]["current"] == True
-        assert branch_info["main"]["current"] == False
+        assert branch_info["test"]["current"]
+        assert not branch_info["main"]["current"]
         assert branch_info["test"]["moment_count"] >= 1
 
     def test_moment_copy(self):

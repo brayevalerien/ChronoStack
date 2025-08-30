@@ -223,7 +223,7 @@ class TestLexer:
             dup 2 < if [ pop 1 ] [
                 dup 1 - echo 2 - echo +
             ] ;
-            
+
         5 fib
         """
 

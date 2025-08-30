@@ -214,7 +214,7 @@ class Timeline:
 
         return True
 
-    def _would_create_paradox(self, modified_index: int, original_stack: List[Any]) -> bool:
+    def _would_create_paradox(self, modified_index: int, original_stack: List[Any]) -> bool:  # noqa: ARG002
         """Check if modifying a past moment would create a paradox."""
         # Simple paradox detection: if the change would affect the computation
         # that led to sending the value, it's a paradox
@@ -319,6 +319,6 @@ class Timeline:
             moment = self.moments[i]
             if operation == "push":
                 moment.stack.append(deepcopy(value))
-            elif operation == "multiply" and moment.stack:
-                if isinstance(moment.stack[-1], (int, float)) and isinstance(value, (int, float)):
-                    moment.stack[-1] *= value
+            elif (operation == "multiply" and moment.stack
+                  and isinstance(moment.stack[-1], (int, float)) and isinstance(value, (int, float))):
+                moment.stack[-1] *= value

@@ -324,7 +324,7 @@ class Interpreter:
         """Determine if a value is truthy."""
         if isinstance(value, (int, float)):
             return value != 0
-        elif isinstance(value, str) or isinstance(value, list):
+        elif isinstance(value, (str, list)):
             return len(value) > 0
         elif value is None:
             return False

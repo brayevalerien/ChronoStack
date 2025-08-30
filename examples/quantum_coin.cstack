@@ -1,0 +1,17 @@
+# Quantum coin flip simulation using branches
+# Create multiple timeline branches to simulate superposition
+
+# Initial state
+"quantum-coin" tick
+
+# Create heads branch
+"heads" branch
+1 tick  # heads = 1
+
+# Go back and create tails branch  
+"quantum-coin" merge
+"tails" branch
+0 tick  # tails = 0
+
+# Show both possible outcomes exist in parallel timelines
+"quantum-coin" merge

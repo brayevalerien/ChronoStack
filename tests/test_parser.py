@@ -199,7 +199,7 @@ class TestParser:
 
         word_def = ast.statements[0]
         assert isinstance(word_def, WordDefinitionNode)
-        assert word_def.name == ":double"
+        assert word_def.name == "double"
         assert len(word_def.body) == 2
 
         assert isinstance(word_def.body[0], OperationNode)
@@ -215,7 +215,7 @@ class TestParser:
 
         word_def = ast.statements[0]
         assert isinstance(word_def, WordDefinitionNode)
-        assert word_def.name == ":conditional"
+        assert word_def.name == "conditional"
 
         # Should contain: dup, 0, >, if, [2 *], [pop 0]
         assert len(word_def.body) == 6
@@ -253,7 +253,7 @@ class TestParser:
 
         # Word definition
         assert isinstance(ast.statements[4], WordDefinitionNode)
-        assert ast.statements[4].name == ":square"
+        assert ast.statements[4].name == "square"
 
         # Operation
         assert isinstance(ast.statements[5], OperationNode)
@@ -298,7 +298,7 @@ class TestParser:
             dup 2 < if [ pop 1 ] [
                 dup 1 - echo 2 - echo +
             ] ;
-            
+
         5 fib
         """
 
@@ -310,7 +310,7 @@ class TestParser:
         # Check word definition structure
         word_def = ast.statements[0]
         assert isinstance(word_def, WordDefinitionNode)
-        assert word_def.name == ":fib"
+        assert word_def.name == "fib"
 
         # Should contain the if-then-else structure
         assert len(word_def.body) >= 3  # At minimum: dup, condition, if, blocks
@@ -318,13 +318,13 @@ class TestParser:
     def test_whitespace_and_newlines(self):
         """Test that whitespace and newlines are handled correctly."""
         ast = self.parse_code("""
-        
+
         42
-        
+
         dup
-        
+
         +
-        
+
         """)
 
         assert len(ast.statements) == 3

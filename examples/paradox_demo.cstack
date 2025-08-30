@@ -1,0 +1,19 @@
+# Paradox example using send
+# Creates a causal loop that must be resolved
+
+# Start with initial value
+10 tick
+
+# Calculate something based on current value
+dup 2 * tick  # 10 * 2 = 20
+
+# Send a different value back in time - creates paradox!
+999 2 send
+
+# The interpreter must resolve: 
+# - Original timeline had [10] -> [10, 20]
+# - But we sent 999 back, so it should be [999] -> [999, 1998]
+# - This creates an inconsistency that needs resolution
+
+# Check what actually happened
+0 rewind

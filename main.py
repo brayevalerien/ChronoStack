@@ -112,7 +112,10 @@ def format_stack_for_viz(stack) -> str:
 
 
 def create_example_file(filename: str) -> None:
-    """Create an example ChronoStack file."""
+    """Create an example ChronoStack file in the examples/ directory."""
+    # Ensure examples directory exists
+    Path("examples").mkdir(exist_ok=True)
+
     examples = {
         "fibonacci.cstack": """
 # Fibonacci using temporal mechanics
@@ -120,18 +123,18 @@ def create_example_file(filename: str) -> None:
     dup 2 < if [ pop 1 ] [
         dup 1 - echo 2 - echo +
     ] ;
-    
+
 # Calculate fibonacci of 5
 5 fib
 echo 0  # Show the result
 """,
         "palindrome.cstack": """
 # Palindrome checker using temporal-fold
-"racecar" 
+"racecar"
 dup "count" temporal-fold
 [ dup echo ] "first" temporal-fold
 [ swap echo ] "last" temporal-fold
-= if [ "Palindrome!" ] [ "Not palindrome" ] 
+= if [ "Palindrome!" ] [ "Not palindrome" ]
 """,
         "time_travel.cstack": """
 # Time travel example
@@ -140,7 +143,7 @@ dup "count" temporal-fold
 999 2 send     # Send 999 back 2 moments (creates paradox!)
 
 # Check what happened
-0 rewind       # Go back to beginning  
+0 rewind       # Go back to beginning
 # Stack now has [999 42] due to time travel
 """,
         "branching.cstack": """
@@ -157,9 +160,10 @@ dup "count" temporal-fold
         print(f"Available examples: {', '.join(examples.keys())}")
         return
 
-    with open(filename, "w", encoding="utf-8") as f:
+    filepath = Path("examples") / filename
+    with open(filepath, "w", encoding="utf-8") as f:
         f.write(examples[filename])
-    print(f"Created example file: {filename}")
+    print(f"Created example file: {filepath}")
 
 
 def main() -> None:

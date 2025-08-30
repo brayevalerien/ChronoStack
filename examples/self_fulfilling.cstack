@@ -1,0 +1,8 @@
+# Self-fulfilling prophecy using peek-future
+# The result depends on what we peek at in the future
+42 tick
+# Peek into the future to see what value will be there
+1 peek-future 
+# If future is 100, push 100, otherwise push 0
+100 = if [ 100 ] [ 0 ]
+tick

@@ -1,0 +1,5 @@
+# Palindrome checker using temporal mechanics
+"racecar"
+# Split string into characters and check if it reads the same forwards and backwards
+dup
+# Use temporal operations to compare first and last characters
